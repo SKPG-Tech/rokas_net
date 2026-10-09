@@ -1,5 +1,3 @@
-import "dart:collection";
-
 abstract base mixin class SinglyLinkedNode<T extends SinglyLinkedNode<T>> {
   SinglyLinkedList<T>? _list;
   T? _next;
@@ -11,7 +9,7 @@ abstract base mixin class SinglyLinkedNode<T extends SinglyLinkedNode<T>> {
   }
 
   T? get next {
-    if (_list == null || identical(_list!.first, _next)) return null;
+    if (_list == null) return null;
     return _next;
   }
 
@@ -26,10 +24,13 @@ abstract base mixin class SinglyLinkedNode<T extends SinglyLinkedNode<T>> {
 
 base class SinglyLinkedList<T extends SinglyLinkedNode<T>> extends Iterable<T> {
   int _length = 0;
+  int _modificationCount = 0;
   T? _first;
   T? _last;
 
   SinglyLinkedList();
+
+  void add(T entry) => addLast(entry);
 
   void addFirst(T entry) {
     _insertBefore(_first, entry);
@@ -61,6 +62,7 @@ base class SinglyLinkedList<T extends SinglyLinkedNode<T>> extends Iterable<T> {
 
   void clear() {
     if (isEmpty) return;
+    _modificationCount++;
 
     var current = _first;
     while (current != null) {
@@ -103,10 +105,14 @@ base class SinglyLinkedList<T extends SinglyLinkedNode<T>> extends Iterable<T> {
   @override
   void forEach(void Function(T entry) action) {
     if (isEmpty) return;
+    var modificationCount = _modificationCount;
 
     var current = _first;
     while (current != null) {
       action(current);
+      if (modificationCount != _modificationCount) {
+        throw ConcurrentModificationError(this);
+      }
       current = current._next;
     }
   }
@@ -118,8 +124,13 @@ base class SinglyLinkedList<T extends SinglyLinkedNode<T>> extends Iterable<T> {
     if (newEntry.list != null) {
       throw StateError("SinglyLinkedNode is already in a SinglyLinkedList");
     }
+    if (entry != null && entry._list != this) {
+      throw ArgumentError("Target entry is not in this list");
+    }
 
+    _modificationCount++;
     newEntry._list = this;
+
     if (isEmpty) {
       assert(entry == null);
       _first = _last = newEntry;
@@ -132,8 +143,9 @@ base class SinglyLinkedList<T extends SinglyLinkedNode<T>> extends Iterable<T> {
       _first = newEntry;
     } else {
       var current = _first!;
-      while (current._next != null && !identical(current._next!, entry))
+      while (current._next != null && !identical(current._next, entry))
         current = current._next!;
+
       newEntry._next = current._next;
       current._next = newEntry;
     }
@@ -144,8 +156,13 @@ base class SinglyLinkedList<T extends SinglyLinkedNode<T>> extends Iterable<T> {
     if (newEntry.list != null) {
       throw StateError("SinglyLinkedNode is already in a SinglyLinkedList");
     }
+    if (entry != null && entry._list != this) {
+      throw ArgumentError("Target entry is not in this list");
+    }
 
+    _modificationCount++;
     newEntry._list = this;
+
     if (isEmpty) {
       assert(entry == null);
       _first = _last = newEntry;
@@ -160,6 +177,7 @@ base class SinglyLinkedList<T extends SinglyLinkedNode<T>> extends Iterable<T> {
       var current = _first!;
       while (current._next != null && !identical(current, entry))
         current = current._next!;
+
       newEntry._next = current._next;
       current._next = newEntry;
     }
@@ -167,8 +185,10 @@ base class SinglyLinkedList<T extends SinglyLinkedNode<T>> extends Iterable<T> {
   }
 
   void _unlink(T entry) {
+    _modificationCount++;
     entry._list = null;
-    if (isEmpty) {
+
+    if (_length == 1) {
       _first = _last = null;
     } else if (identical(entry, _first)) {
       _first = entry._next;
@@ -176,11 +196,13 @@ base class SinglyLinkedList<T extends SinglyLinkedNode<T>> extends Iterable<T> {
       var current = _first!;
       while (current._next != null && !identical(current._next, entry))
         current = current._next!;
+
       current._next = entry._next;
       if (identical(entry, _last)) {
         _last = current;
       }
     }
+
     _length--;
     entry._next = null;
   }
@@ -189,25 +211,27 @@ base class SinglyLinkedList<T extends SinglyLinkedNode<T>> extends Iterable<T> {
 class _SinglyLinkedIterator<T extends SinglyLinkedNode<T>>
     implements Iterator<T> {
   final SinglyLinkedList<T> _list;
+  final int _modificationCount;
   T? _current;
   T? _next;
-  bool _visitedFirst;
 
   _SinglyLinkedIterator(SinglyLinkedList<T> list)
     : _list = list,
-      _next = list._first,
-      _visitedFirst = false;
+      _modificationCount = list._modificationCount,
+      _next = list._first;
 
   @override
   T get current => _current as T;
 
   @override
   bool moveNext() {
-    if (_list.isEmpty || (_visitedFirst && identical(_next, _list.first))) {
+    if (_modificationCount != _list._modificationCount) {
+      throw ConcurrentModificationError(_list);
+    }
+    if (_list.isEmpty || _next == null) {
       _current = null;
       return false;
     }
-    _visitedFirst = true;
     _current = _next;
     _next = _next!._next;
     return true;
