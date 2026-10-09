@@ -14,7 +14,7 @@ abstract final class _Routes {
 }
 
 extension AppNavigation on BuildContext {
-  void goBrowser({required int tab}) => go("${_Routes.browser}/$tab");
+  void goBrowserOrTab({required int tab}) => go("${_Routes.browser}/$tab");
 
   void pushTabs() => push(_Routes.tabs);
   void pushHistory() => push(_Routes.history);
