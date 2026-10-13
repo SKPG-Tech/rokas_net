@@ -2,51 +2,34 @@ import "package:flutter/widgets.dart";
 import "package:go_router/go_router.dart";
 
 import "screens/browser_screen.dart";
-
-import "app.dart";
+import "screens/history_screen.dart";
 
 abstract final class _Routes {
   static const browser = "/browser";
-  static const browserTab = ":tab";
-
-  static const tabs = "/tabs";
   static const history = "/history";
 }
 
 extension AppNavigation on BuildContext {
-  void goBrowserOrTab({required int tab}) => go("${_Routes.browser}/$tab");
-
-  void pushTabs() => push(_Routes.tabs);
-  void pushHistory() => push(_Routes.history);
+  void goBrowser() => go(_Routes.browser);
+  Future<T?> pushHistory<T>() async => await push(_Routes.history);
 }
 
 final appRouter = GoRouter(
   initialLocation: _Routes.browser,
   routes: [
-    StatefulShellRoute.indexedStack(
-      builder: (_, _, navigationShell) =>
-          AppScreen(navigationShell: navigationShell),
-      branches: [
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: _Routes.browser,
-              builder: (_, _) => const BrowserScreen(),
-              routes: [
-                GoRoute(
-                  path: _Routes.browserTab,
-                  builder: (_, state) {
-                    final tab = state.pathParameters["tab"];
-                    return BrowserScreen(
-                      tab: tab != null ? .tryParse(tab) : null,
-                    );
-                  },
-                ),
-              ],
-            ),
-          ],
+    GoRoute(path: _Routes.browser, builder: (_, _) => const BrowserScreen()),
+    GoRoute(
+      path: _Routes.history,
+      pageBuilder: (_, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const HistoryScreen(),
+        transitionsBuilder: (_, animation, _, child) => SlideTransition(
+          position: Tween<Offset>(begin: const .new(0, 1), end: .zero).animate(
+            CurvedAnimation(parent: animation, curve: Curves.easeInOutExpo),
+          ),
+          child: child,
         ),
-      ],
+      ),
     ),
   ],
 );
