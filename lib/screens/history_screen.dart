@@ -10,11 +10,9 @@ class HistoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    final historyProvider = context.read<HistoryProvider>();
-
     return Scaffold(
       appBar: AppBar(backgroundColor: colorScheme.surfaceContainer),
-      body: Column(children: _buildHistory(historyProvider)),
+      body: Column(children: _buildHistory(context.read<HistoryProvider>())),
     );
   }
 
