@@ -1,4 +1,4 @@
-package com.example.rokas_net
+package dev.salvijus.rokas_net
 
 import io.flutter.embedding.android.FlutterActivity
 
