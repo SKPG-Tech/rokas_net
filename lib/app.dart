@@ -1,7 +1,8 @@
 import "package:material_ui/material_ui.dart";
-import "package:go_router/go_router.dart";
 import "package:provider/provider.dart";
 
+import "providers/history_provider.dart";
+import "providers/tab_provider.dart";
 import "routes.dart";
 
 class RokasNetApp extends StatelessWidget {
@@ -10,29 +11,22 @@ class RokasNetApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [Provider.value(value: 1)],
+      providers: [
+        ChangeNotifierProvider(create: (_) => TabProvider()),
+        ChangeNotifierProvider(create: (_) => HistoryProvider()),
+      ],
       child: MaterialApp.router(
         title: "RokasNet",
         routerConfig: appRouter,
         debugShowCheckedModeBanner: false,
+        theme: ThemeData.dark().copyWith(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color.fromARGB(255, 0, 0, 255),
+            brightness: .dark,
+          ),
+        ),
         // theme: ThemeData(colorScheme: Styles.colors, textTheme: Styles.text),
       ),
-    );
-  }
-}
-
-class AppScreen extends StatelessWidget {
-  final StatefulNavigationShell _navigationShell;
-
-  const new({super.key, required this._navigationShell});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(backgroundColor: Colors.amber),
-      primary: false,
-      drawer: const Drawer(child: DrawerHeader(child: Text("hello"))),
-      body: _navigationShell,
     );
   }
 }
