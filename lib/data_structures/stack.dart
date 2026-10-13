@@ -1,7 +1,7 @@
 import "dart:collection";
 
 class Stack<T> extends Iterable<T> {
-  final Queue<T> _deque = .new();
+  final _deque = Queue<T>();
   int _modificationCount = 0;
 
   void push(T value) {
