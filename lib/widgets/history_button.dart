@@ -1,6 +1,9 @@
 import "package:material_ui/material_ui.dart";
+import "package:provider/provider.dart";
 
+import "../providers/tab_provider.dart";
 import "../routes.dart";
+import "../utils/haptics.dart";
 
 class HistoryButton extends StatelessWidget {
   const HistoryButton({super.key});
@@ -12,7 +15,12 @@ class HistoryButton extends StatelessWidget {
 
     return TextButton.icon(
       onPressed: () async {
-        if (context.mounted) await context.pushHistory();
+        HapticFeedback.play(.quickRise);
+        final result = await context.pushHistory();
+        if (result != null && context.mounted) {
+          context.read<TabProvider>().openNewTab(uri: result.uri);
+          Scaffold.of(context).closeEndDrawer();
+        }
       },
       icon: const Icon(Icons.history_rounded),
       style: .new(

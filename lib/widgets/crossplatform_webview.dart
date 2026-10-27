@@ -16,20 +16,6 @@ class CrossplatformWebview extends StatefulWidget {
 }
 
 class _CrossplatformWebviewState extends State<CrossplatformWebview> {
-  final _isWindows = Platform.isWindows;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.controller.initialize();
-  }
-
-  @override
-  void dispose() {
-    //widget.controller.disposeController();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final controller = widget.controller;
@@ -37,14 +23,13 @@ class _CrossplatformWebviewState extends State<CrossplatformWebview> {
     return ListenableBuilder(
       listenable: controller,
       builder: (_, _) {
-        if (_isWindows) {
-          final webviewController = controller
-              .getWebviewController<WebviewController>();
+        final webviewController = controller.getWebviewController();
+        if (Platform.isWindows) {
           return webviewController.value.isInitialized
               ? Webview(webviewController)
-              : const Center(child: CircularProgressIndicator());
+              : const SizedBox();
         } else {
-          return WebViewWidget(controller: controller.getWebviewController());
+          return WebViewWidget(controller: webviewController);
         }
       },
     );

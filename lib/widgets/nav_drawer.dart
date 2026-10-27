@@ -1,11 +1,10 @@
-import "dart:convert";
-
 import "package:material_symbols_icons/symbols.dart";
 import "package:material_ui/material_ui.dart" hide Tab;
 
 import "../models/tab.dart";
 import "../utils/ui.dart";
 import "history_button.dart";
+import "tab_icon.dart";
 
 class NavDrawer extends StatelessWidget {
   final Tabs tabs;
@@ -89,9 +88,7 @@ class NavDrawer extends StatelessWidget {
         addVerticalGap(10),
         ...tabs.map(
           (tab) => _NavigationDestination(
-            icon: tab.favicon != null
-                ? ImageIcon(MemoryImage(base64Decode(tab.favicon!)))
-                : const Icon(Icons.all_inclusive_sharp),
+            icon: TabIcon(page: tab),
             label: Text(tab.title ?? tab.uri.toString()),
             onClosePressed: () => onCloseTabPressed(tab),
           ),

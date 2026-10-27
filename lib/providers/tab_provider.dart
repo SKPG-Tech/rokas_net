@@ -5,16 +5,17 @@ import "../models/tab.dart";
 
 class TabProvider with ChangeNotifier {
   final _tabs = Tabs();
-  int? _selectedTab;
+  Tab? _tab;
+  int? _tabIndex;
 
   TabProvider();
 
   Tabs get tabs => _tabs;
-  int? get selectedTab => _selectedTab;
-  Tab? get tab => _selectedTab != null ? _tabs.elementAt(_selectedTab!) : null;
+  Tab? get tab => _tab;
+  int? get tabIndex => _tabIndex;
 
   void selectTab(int index) {
-    _selectedTab = index;
+    _tabIndex = index;
     notifyListeners();
   }
 
@@ -22,53 +23,59 @@ class TabProvider with ChangeNotifier {
     final tabToRemove = _tabs.indexed.firstWhere((e) => identical(e.$2, tab));
     _tabs.remove(tab);
     if (_tabs.isEmpty) {
-      _selectedTab = null;
+      _tab = null;
+      _tabIndex = null;
     } else {
-      if (tabToRemove.$1 < _selectedTab!) {
-        _selectedTab = _selectedTab! - 1;
-      } else if (tabToRemove.$1 >= _selectedTab!) {
-        _selectedTab = _selectedTab!.clamp(0, _tabs.length - 1);
+      if (tabToRemove.$1 < tabIndex!) {
+        _tabIndex = _tabIndex! - 1;
+        _tab = _tabs.elementAt(_tabIndex!);
+      } else if (tabToRemove.$1 >= tabIndex!) {
+        _tabIndex = tabIndex!.clamp(0, _tabs.length - 1);
+        _tab = _tabs.elementAt(_tabIndex!);
       }
     }
 
     notifyListeners();
   }
 
-  void openNewTab({required Uri uri}) {
+  void openNewTab({Uri? uri}) {
     _tabs.add(Tab(uri: uri));
-    _selectedTab = (_selectedTab ?? -1) + 1;
+    _tabIndex = (_tabIndex ?? -1) + 1;
+    _tab = _tabs.elementAt(_tabIndex!);
     notifyListeners();
   }
 
   void navigateTab(Uri uri) {
-    final tab = _tabs.elementAt(_selectedTab!);
-    tab.backwardHistory.push(Page(uri: tab.uri));
-    tab.forwardHistory.clear();
-    tab.uri = uri;
+    if (_tab == null) {
+      openNewTab(uri: uri);
+      return;
+    }
+
+    _tab!.backwardHistory.push(Page(uri: _tab!.uri));
+    _tab!.forwardHistory.clear();
+    _tab!.uri = uri;
     notifyListeners();
   }
 
   void goForward() {
-    final tab = _tabs.elementAt(_selectedTab!);
-    tab.backwardHistory.push(Page(uri: tab.uri));
-    tab.uri = tab.forwardHistory.pop().uri;
+    _tab!.backwardHistory.push(Page(uri: _tab!.uri));
+    _tab!.uri = _tab!.forwardHistory.pop().uri;
     notifyListeners();
   }
 
   void goBackward() {
-    final tab = _tabs.elementAt(_selectedTab!);
-    tab.forwardHistory.push(Page(uri: tab.uri));
-    tab.uri = tab.backwardHistory.pop().uri;
+    _tab!.forwardHistory.push(Page(uri: _tab!.uri));
+    _tab!.uri = _tab!.backwardHistory.pop().uri;
     notifyListeners();
   }
 
-  void Function()? get forwardHandler {
-    if (_selectedTab == null || tab!.forwardHistory.isEmpty) return null;
+  VoidCallback? get forwardHandler {
+    if (_tab == null || _tab!.forwardHistory.isEmpty) return null;
     return goForward;
   }
 
-  void Function()? get backwardHandler {
-    if (_selectedTab == null || tab!.backwardHistory.isEmpty) return null;
+  VoidCallback? get backwardHandler {
+    if (_tab == null || _tab!.backwardHistory.isEmpty) return null;
     return goBackward;
   }
 }

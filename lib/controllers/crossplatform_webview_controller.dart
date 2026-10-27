@@ -10,10 +10,12 @@ abstract class _PlatformInterface<T> {
 
   void navigateTo(Uri uri);
 
-  T get webviewController;
+  T getWebviewController();
 }
 
-class CrossplatformWebviewController with ChangeNotifier {
+class CrossplatformWebviewController
+    with ChangeNotifier
+    implements _PlatformInterface {
   final _PlatformInterface _controller;
 
   CrossplatformWebviewController({
@@ -22,18 +24,22 @@ class CrossplatformWebviewController with ChangeNotifier {
            ? _MobileController(delegate)
            : _DesktopController();
 
-  T getWebviewController<T>() => _controller.webviewController as T;
+  @override
+  dynamic getWebviewController() => _controller.getWebviewController();
 
+  @override
   Future<void> initialize() async {
     await _controller.initialize();
     notifyListeners();
   }
 
-  void disposeController() {
+  @override
+  void dispose() {
     _controller.dispose();
-    notifyListeners();
+    super.dispose();
   }
 
+  @override
   void navigateTo(Uri uri) {
     _controller.navigateTo(uri);
     notifyListeners();
@@ -47,7 +53,7 @@ class _MobileController implements _PlatformInterface<WebViewController> {
   _MobileController(this.delegateReceiver);
 
   @override
-  WebViewController get webviewController => _controller;
+  WebViewController getWebviewController() => _controller;
 
   @override
   Future<void> initialize() async {
@@ -66,7 +72,7 @@ class _DesktopController implements _PlatformInterface<WebviewController> {
   final _controller = WebviewController();
 
   @override
-  WebviewController get webviewController => _controller;
+  WebviewController getWebviewController() => _controller;
 
   @override
   Future<void> initialize() async {

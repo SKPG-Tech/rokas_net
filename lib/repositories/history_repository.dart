@@ -7,16 +7,19 @@ import "../models/history_entry.dart";
 
 abstract final class HistoryRepository {
   static late final String _historyFilePath;
+  static final JsonEncoder _jsonEncoder = const .withIndent("  ");
 
   static Future<void> initialize() async {
-    final folderPath = await getDownloadsDirectory();
+    final folderPath = Platform.isWindows
+        ? await getDownloadsDirectory()
+        : Directory("/storage/emulated/0/Download");
     _historyFilePath = "${folderPath?.path}/istorija.json";
   }
 
   static File get _historyFile => File(_historyFilePath);
 
   static void saveHistory(History history) {
-    final json = jsonEncode(history.map((e) => e.toJson()).toList());
+    final json = _jsonEncoder.convert(history.map((e) => e.toJson()).toList());
     _historyFile.writeAsStringSync(json);
   }
 

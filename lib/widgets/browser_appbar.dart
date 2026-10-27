@@ -12,9 +12,12 @@ class BrowserAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   final TextEditingController _urlController;
 
+  final FocusNode urlFieldFocusNode;
+
   BrowserAppBar({
     super.key,
     this.initialUri,
+    required this.urlFieldFocusNode,
     required this.onBackwardPressed,
     required this.onForwardPressed,
     required this.onUriSubmitted,
@@ -51,6 +54,7 @@ class BrowserAppBar extends StatelessWidget implements PreferredSizeWidget {
       titleSpacing: 4,
       actionsPadding: const .only(right: 10),
       title: TextField(
+        focusNode: urlFieldFocusNode,
         controller: _urlController,
         decoration: const InputDecoration(
           border: ShapedInputBorder(

@@ -1,6 +1,7 @@
-import "package:flutter/widgets.dart";
 import "package:go_router/go_router.dart";
+import "package:material_ui/material_ui.dart" hide Page;
 
+import "models/page.dart";
 import "screens/browser_screen.dart";
 import "screens/history_screen.dart";
 
@@ -11,7 +12,7 @@ abstract final class _Routes {
 
 extension AppNavigation on BuildContext {
   void goBrowser() => go(_Routes.browser);
-  Future<T?> pushHistory<T>() async => await push(_Routes.history);
+  Future<Page?> pushHistory() async => await push(_Routes.history);
 }
 
 final appRouter = GoRouter(

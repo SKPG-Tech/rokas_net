@@ -25,7 +25,6 @@ class RokasNetApp extends StatelessWidget {
             brightness: .dark,
           ),
         ),
-        // theme: ThemeData(colorScheme: Styles.colors, textTheme: Styles.text),
       ),
     );
   }

@@ -1,13 +1,13 @@
 class Page {
-  Uri uri;
+  Uri? uri;
   String? title;
   String? favicon;
 
-  Page({required this.uri, this.title, this.favicon});
+  Page({this.uri, this.title, this.favicon});
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
-    json["uri"] = uri.toString();
+    json["uri"] = uri!.toString();
     if (title != null) json["title"] = title;
     if (favicon != null) json["favicon"] = favicon;
     return json;

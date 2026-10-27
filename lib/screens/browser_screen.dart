@@ -3,7 +3,6 @@ import "package:material_ui/material_ui.dart" hide Tab;
 import "package:provider/provider.dart";
 
 import "../controllers/crossplatform_webview_controller.dart";
-import "../models/tab.dart";
 import "../providers/history_provider.dart";
 import "../providers/tab_provider.dart";
 import "../utils/ui.dart";
@@ -11,9 +10,6 @@ import "../widgets/browser_appbar.dart";
 import "../widgets/crossplatform_webview.dart";
 import "../widgets/history_button.dart";
 import "../widgets/nav_drawer.dart";
-
-void _createNewTab(BuildContext context) =>
-    context.read<TabProvider>().openNewTab(uri: .parse("https://google.com"));
 
 class BrowserScreen extends StatefulWidget {
   const BrowserScreen({super.key});
@@ -27,45 +23,66 @@ class _BrowserScreenState extends State<BrowserScreen> {
   final _webviewController = CrossplatformWebviewController(
     delegate: () => .new(),
   );
+  late final FocusNode _urlFieldFocusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _webviewController.initialize();
+    _urlFieldFocusNode = .new();
+  }
 
   @override
   void dispose() {
-    // _webviewController.dispose();
+    _webviewController.dispose();
+    _urlFieldFocusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final uri = context.select((TabProvider provider) => provider.tab?.uri);
+    if (uri != null) setState(() => _webviewController.navigateTo(uri));
+
     return Consumer<TabProvider>(
       builder: (context, tabProvider, _) {
         final tab = tabProvider.tab;
+
         return Scaffold(
           key: _scaffoldKey,
+          resizeToAvoidBottomInset: false,
           appBar: BrowserAppBar(
             initialUri: tab?.uri,
+            urlFieldFocusNode: _urlFieldFocusNode,
             onBackwardPressed: tabProvider.backwardHandler,
             onForwardPressed: tabProvider.forwardHandler,
             onUriSubmitted: (value) {
+              if (!value.startsWith(RegExp(r"https?:\/\/")))
+                value = "https://$value";
+
               final uri = Uri.parse(value);
               if (uri == tab?.uri) return;
 
               tabProvider.navigateTab(uri);
-              setState(() => _webviewController.navigateTo(uri));
               context.read<HistoryProvider>().addEntry(uri);
+              _urlFieldFocusNode.unfocus();
             },
           ),
           endDrawer: NavDrawer(
             tabs: tabProvider.tabs,
-            selectedIndex: tabProvider.selectedTab,
+            selectedIndex: tabProvider.tabIndex,
             onDestinationSelected: (value) {
               tabProvider.selectTab(value);
               _scaffoldKey.currentState?.closeEndDrawer();
             },
-            onNewTabPressed: () => _createNewTab(context),
+            onNewTabPressed: () {
+              tabProvider.openNewTab();
+              _urlFieldFocusNode.requestFocus();
+            },
             onCloseTabPressed: (tab) => tabProvider.closeTab(tab),
           ),
           body: tab == null
-              ? const _NewTabView()
+              ? _NewTabView(urlFieldFocusNode: _urlFieldFocusNode)
               : CrossplatformWebview(controller: _webviewController),
         );
       },
@@ -74,7 +91,9 @@ class _BrowserScreenState extends State<BrowserScreen> {
 }
 
 class _NewTabView extends StatelessWidget {
-  const _NewTabView();
+  final FocusNode _urlFieldFocusNode;
+
+  const _NewTabView({required this._urlFieldFocusNode});
 
   @override
   Widget build(BuildContext context) {
@@ -121,7 +140,10 @@ class _NewTabView extends StatelessWidget {
                   spacing: 15,
                   children: [
                     FilledButton.tonalIcon(
-                      onPressed: () => _createNewTab(context),
+                      onPressed: () {
+                        context.read<TabProvider>().openNewTab();
+                        _urlFieldFocusNode.requestFocus();
+                      },
                       style: .new(
                         backgroundColor: .all(colorScheme.secondaryContainer),
                         fixedSize: .all(const .fromHeight(48)),
@@ -139,19 +161,5 @@ class _NewTabView extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class _TabView extends StatelessWidget {
-  final Tab _tab;
-
-  const _TabView({required this._tab});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textStyles = Theme.of(context).textTheme;
-
-    return Text(_tab.uri.toString());
   }
 }
