@@ -24,8 +24,8 @@ abstract final class HapticFeedback {
     }
   }
 
-  static void play(HapticPrimitives primitive) {
+  static Future<void> play(HapticPrimitives primitive) async {
     if (!_supportedPrimitives.contains(primitive)) return;
-    AdvancedHaptics.playComposition([primitive.event]);
+    await AdvancedHaptics.playComposition([primitive.event]);
   }
 }

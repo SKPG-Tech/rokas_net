@@ -142,6 +142,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ),
         body: ListView(
           shrinkWrap: true,
+          physics: const ClampingScrollPhysics(),
           children: TimePeriod.values.map((timePeriod) {
             final filteredHistory = timePeriod.filter(history);
             final controller = _expansibleControllers.putIfAbsent(
@@ -179,6 +180,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return ListView.builder(
       shrinkWrap: true,
       reverse: true,
+      primary: false,
       itemCount: history.length,
       itemBuilder: (context, i) {
         final colorScheme = Theme.of(context).colorScheme;

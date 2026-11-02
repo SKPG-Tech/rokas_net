@@ -31,6 +31,15 @@ class _RokasNetAppState extends State<RokasNetApp> with WidgetsBindingObserver {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (<AppLifecycleState>{.inactive, .detached}.contains(state)) {
+      final history = widget.historyProvider.globalHistory;
+      HistoryRepository.saveHistory(history);
+    }
+  }
+
+  @override
   Future<AppExitResponse> didRequestAppExit() async {
     if (!mounted) return .exit;
 

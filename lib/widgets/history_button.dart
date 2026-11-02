@@ -15,10 +15,17 @@ class HistoryButton extends StatelessWidget {
 
     return TextButton.icon(
       onPressed: () async {
-        HapticFeedback.play(.quickRise);
+        await HapticFeedback.play(.quickRise);
+        if (!context.mounted) return;
         final result = await context.pushHistory();
         if (result != null && context.mounted) {
-          context.read<TabProvider>().openNewTab(uri: result.uri);
+          final tabProvider = context.read<TabProvider>();
+          tabProvider.openNewTab(uri: result.uri);
+          final tabs = tabProvider.tabs.indexed;
+          final createdTab = tabs.first.$2;
+          tabProvider.selectTab(
+            tabs.firstWhere((e) => identical(e.$2, createdTab)).$1,
+          );
           Scaffold.of(context).closeEndDrawer();
         }
       },

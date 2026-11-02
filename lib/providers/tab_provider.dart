@@ -6,43 +6,47 @@ import "../models/tab.dart";
 class TabProvider with ChangeNotifier {
   final _tabs = Tabs();
   Tab? _tab;
-  int? _tabIndex;
 
   TabProvider();
 
   Tabs get tabs => _tabs;
   Tab? get tab => _tab;
-  int? get tabIndex => _tabIndex;
+  int? get tabIndex {
+    try {
+      return _tabs.indexed.firstWhere((e) => identical(e.$2, _tab)).$1;
+    } on StateError {
+      return null;
+    }
+  }
 
   void selectTab(int index) {
-    _tabIndex = index;
     _tab = _tabs.elementAt(index);
     notifyListeners();
   }
 
   void closeTab(Tab tab) {
-    final tabToRemove = _tabs.indexed.firstWhere((e) => identical(e.$2, tab));
+    var previousIndex = tabIndex;
+    final selectedRemoved = identical(_tab, tab);
+
     _tabs.remove(tab);
+    _refreshTabState();
+
     if (_tabs.isEmpty) {
       _tab = null;
-      _tabIndex = null;
-    } else {
-      if (tabToRemove.$1 < tabIndex!) {
-        _tabIndex = _tabIndex! - 1;
-        _tab = _tabs.elementAt(_tabIndex!);
-      } else if (tabToRemove.$1 >= tabIndex!) {
-        _tabIndex = tabIndex!.clamp(0, _tabs.length - 1);
-        _tab = _tabs.elementAt(_tabIndex!);
-      }
+    } else if (previousIndex! >= _tabs.length) {
+      _tab = _tabs.elementAt((previousIndex - 1).clamp(0, _tabs.length));
+    } else if (selectedRemoved) {
+      _tab = _tabs.elementAt(previousIndex);
     }
 
     notifyListeners();
   }
 
   void openNewTab({Uri? uri}) {
-    _tabs.add(Tab(uri: uri));
-    _tabIndex = (_tabIndex ?? -1) + 1;
-    _tab = _tabs.elementAt(_tabIndex!);
+    _tabs.addFirst(Tab(uri: uri));
+    if (_tabs.length == 1) _tab = _tabs.single;
+    _refreshTabState();
+    if (!_tab!.isActive) _tab = _tabs.lastWhere((tab) => tab.isActive);
     notifyListeners();
   }
 
@@ -80,5 +84,9 @@ class TabProvider with ChangeNotifier {
   VoidCallback? get backwardHandler {
     if (_tab == null || _tab!.backwardHistory.isEmpty) return null;
     return goBackward;
+  }
+
+  void _refreshTabState() {
+    for (final (index, tab) in _tabs.indexed) tab.isActive = index < 5;
   }
 }
