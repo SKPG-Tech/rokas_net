@@ -20,7 +20,7 @@ class HistoryButton extends StatelessWidget {
         final result = await context.pushHistory();
         if (result != null && context.mounted) {
           final tabProvider = context.read<TabProvider>();
-          tabProvider.openNewTab(uri: result.uri);
+          tabProvider.openNewTab(url: result.url);
           final tabs = tabProvider.tabs.indexed;
           final createdTab = tabs.first.$2;
           tabProvider.selectTab(

@@ -42,37 +42,37 @@ class TabProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void openNewTab({Uri? uri}) {
-    _tabs.addFirst(Tab(uri: uri));
+  void openNewTab({Uri? url}) {
+    _tabs.addFirst(Tab(url: url));
     if (_tabs.length == 1) _tab = _tabs.single;
     _refreshTabState();
     if (!_tab!.isActive) _tab = _tabs.lastWhere((tab) => tab.isActive);
     notifyListeners();
   }
 
-  void navigateTab(Uri uri) {
+  void navigateTab(Uri url) {
     if (_tab == null) {
-      openNewTab(uri: uri);
+      openNewTab(url: url);
       return;
     }
 
-    if (_tab!.uri != null) {
-      _tab!.backwardHistory.push(Page(uri: _tab!.uri));
+    if (_tab!.url != null) {
+      _tab!.backwardHistory.push(Page(url: _tab!.url));
     }
     _tab!.forwardHistory.clear();
-    _tab!.uri = uri;
+    _tab!.url = url;
     notifyListeners();
   }
 
   void goForward() {
-    _tab!.backwardHistory.push(Page(uri: _tab!.uri));
-    _tab!.uri = _tab!.forwardHistory.pop().uri;
+    _tab!.backwardHistory.push(Page(url: _tab!.url));
+    _tab!.url = _tab!.forwardHistory.pop().url;
     notifyListeners();
   }
 
   void goBackward() {
-    _tab!.forwardHistory.push(Page(uri: _tab!.uri));
-    _tab!.uri = _tab!.backwardHistory.pop().uri;
+    _tab!.forwardHistory.push(Page(url: _tab!.url));
+    _tab!.url = _tab!.backwardHistory.pop().url;
     notifyListeners();
   }
 

@@ -1,21 +1,21 @@
 class Page {
-  Uri? uri;
+  Uri? url;
   String? title;
 
-  Page({this.uri, this.title});
+  Page({this.url, this.title});
 
-  String? get favicon => uri != null
-      ? "https://www.google.com/s2/favicons?domain=${uri!.host}&sz=32"
+  String? get favicon => url != null
+      ? "https://www.google.com/s2/favicons?domain=${url!.host}&sz=32"
       : null;
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
-    json["uri"] = uri!.toString();
+    json["url"] = url!.toString();
     if (title != null) json["title"] = title;
     return json;
   }
 
   Page.fromJson(Map<String, dynamic> json)
-    : uri = .parse(json["uri"] as String),
+    : url = .parse(json["url"] as String),
       title = json["title"] as String?;
 }

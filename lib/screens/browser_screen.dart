@@ -1,7 +1,9 @@
+import "package:flutter_inappwebview/flutter_inappwebview.dart";
 import "package:material_symbols_icons/symbols.dart";
 import "package:material_ui/material_ui.dart" hide Tab;
 import "package:provider/provider.dart";
 
+import "../controllers/in_app_webview_controller.dart";
 import "../providers/tab_provider.dart";
 import "../utils/ui.dart";
 import "../widgets/browser_appbar.dart";
@@ -17,6 +19,7 @@ class BrowserScreen extends StatefulWidget {
 
 class _BrowserScreenState extends State<BrowserScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final _webviewController = InAppWebviewController();
 
   @override
   void initState() {
@@ -38,15 +41,17 @@ class _BrowserScreenState extends State<BrowserScreen> {
           key: _scaffoldKey,
           resizeToAvoidBottomInset: false,
           appBar: BrowserAppBar(
-            initialUri: tab?.uri,
+            initialUrl: tab?.url,
             onBackwardPressed: tabProvider.backwardHandler,
             onForwardPressed: tabProvider.forwardHandler,
-            onUriSubmitted: (value) {
+            onUrlSubmitted: (value) {
               if (!value.startsWith(RegExp(r"https?:\/\/")))
                 value = "https://$value";
 
-              final uri = Uri.parse(value);
-              if (uri == tab?.uri) return;
+              final url = WebUri(value);
+              if (url == tab?.url) return;
+
+              _webviewController.loadUrl(url);
             },
           ),
           endDrawer: NavDrawer(
@@ -61,7 +66,16 @@ class _BrowserScreenState extends State<BrowserScreen> {
             },
             onCloseTabPressed: (tab) => tabProvider.closeTab(tab),
           ),
-          body: tab == null ? const _NewTabView() : const Placeholder(),
+          body: tab == null
+              ? const _NewTabView()
+              : InAppWebView(
+                  onWebViewCreated: _webviewController.onWebViewCreated,
+                  onLoadStop: (controller, url) async {
+                    tabProvider.navigateTab(url!.uriValue);
+                    print(await _webviewController.getIcon());
+                  },
+                  onTitleChanged: (_, title) => print("TITLE: $title"),
+                ),
         );
       },
     );

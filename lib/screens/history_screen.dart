@@ -75,7 +75,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       history = history.where((e) {
         var match = false;
         if (e.title != null) match |= _searchQuery!.hasMatch(e.title!);
-        if (e.uri != null) match |= _searchQuery!.hasMatch(e.uri.toString());
+        if (e.url != null) match |= _searchQuery!.hasMatch(e.url.toString());
         return match;
       });
     }
@@ -204,7 +204,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 .new(
                   content: Text(
-                    "Removed history entry for ${entry.uri}",
+                    "Removed history entry for ${entry.url}",
                     style: .new(color: colorScheme.onTertiaryContainer),
                   ),
                   backgroundColor: colorScheme.tertiaryContainer,
@@ -242,7 +242,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         if (entry.title != null)
                           Text(entry.title!, style: textStyles.titleMedium),
                         Text(
-                          entry.uri.toString(),
+                          entry.url.toString(),
                           style: urlStyle,
                           maxLines: 2,
                           overflow: .ellipsis,

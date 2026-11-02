@@ -12,7 +12,7 @@ class HistoryProvider with ChangeNotifier {
   History get globalHistory => _globalHistory;
 
   void addEntry(Page? page) {
-    _globalHistory.add(HistoryEntry(uri: page?.uri, title: page?.title));
+    _globalHistory.add(HistoryEntry(url: page?.url, title: page?.title));
     notifyListeners();
   }
 

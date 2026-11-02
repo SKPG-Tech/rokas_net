@@ -6,7 +6,7 @@ typedef History = SinglyLinkedList<HistoryEntry>;
 final class HistoryEntry extends Page with SinglyLinkedNode<HistoryEntry> {
   final DateTime dateTime;
 
-  HistoryEntry({DateTime? dateTime, required super.uri, super.title})
+  HistoryEntry({DateTime? dateTime, required super.url, super.title})
     : dateTime = dateTime ?? .now();
 
   @override

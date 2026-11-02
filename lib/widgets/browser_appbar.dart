@@ -10,21 +10,21 @@ const double _kSwipeThreshold = 100;
 enum _SwipeDirection { left, right }
 
 class BrowserAppBar extends StatefulWidget implements PreferredSizeWidget {
-  final Uri? initialUri;
+  final Uri? initialUrl;
 
   final VoidCallback? onBackwardPressed;
   final VoidCallback? onForwardPressed;
-  final ValueChanged<String>? onUriSubmitted;
+  final ValueChanged<String>? onUrlSubmitted;
 
   late final TextEditingController _urlController;
 
   BrowserAppBar({
     super.key,
-    this.initialUri,
+    this.initialUrl,
     required this.onBackwardPressed,
     required this.onForwardPressed,
-    required this.onUriSubmitted,
-  }) : _urlController = .new(text: initialUri?.toString());
+    required this.onUrlSubmitted,
+  }) : _urlController = .new(text: initialUrl?.toString());
 
   @override
   State<BrowserAppBar> createState() => _BrowserAppBarState();
@@ -131,6 +131,7 @@ class _BrowserAppBarState extends State<BrowserAppBar>
               actionsPadding: const .only(right: 10),
               title: TextField(
                 controller: widget._urlController,
+                keyboardType: .url,
                 decoration: const InputDecoration(
                   border: ShapedInputBorder(
                     borderSide: .none,
@@ -140,7 +141,7 @@ class _BrowserAppBarState extends State<BrowserAppBar>
                   ),
                   filled: true,
                 ),
-                onSubmitted: widget.onUriSubmitted,
+                onSubmitted: widget.onUrlSubmitted,
               ),
             ),
           ),
