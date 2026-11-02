@@ -1,3 +1,4 @@
+import "dart:async";
 import "dart:io";
 
 import "package:flutter/foundation.dart";
@@ -9,6 +10,8 @@ abstract class _PlatformInterface<T> {
   void dispose();
 
   void navigateTo(Uri uri);
+  Future<String?> get title;
+  Stream<String?> get url;
 
   T getWebviewController();
 }
@@ -23,9 +26,6 @@ class CrossplatformWebviewController
   }) : _controller = !Platform.isWindows
            ? _MobileController(delegate)
            : _DesktopController();
-
-  @override
-  dynamic getWebviewController() => _controller.getWebviewController();
 
   @override
   Future<void> initialize() async {
@@ -44,6 +44,15 @@ class CrossplatformWebviewController
     _controller.navigateTo(uri);
     notifyListeners();
   }
+
+  @override
+  Future<String?> get title => _controller.title;
+
+  @override
+  Stream<String?> get url => _controller.url;
+
+  @override
+  dynamic getWebviewController() => _controller.getWebviewController();
 }
 
 class _MobileController implements _PlatformInterface<WebViewController> {
@@ -51,9 +60,6 @@ class _MobileController implements _PlatformInterface<WebViewController> {
   final ValueGetter<NavigationDelegate> delegateReceiver;
 
   _MobileController(this.delegateReceiver);
-
-  @override
-  WebViewController getWebviewController() => _controller;
 
   @override
   Future<void> initialize() async {
@@ -66,13 +72,19 @@ class _MobileController implements _PlatformInterface<WebViewController> {
 
   @override
   void navigateTo(Uri uri) => _controller.loadRequest(uri);
+
+  @override
+  Future<String?> get title => _controller.getTitle();
+
+  @override
+  Stream<String?> get url => _controller.currentUrl().asStream();
+
+  @override
+  WebViewController getWebviewController() => _controller;
 }
 
 class _DesktopController implements _PlatformInterface<WebviewController> {
   final _controller = WebviewController();
-
-  @override
-  WebviewController getWebviewController() => _controller;
 
   @override
   Future<void> initialize() async {
@@ -86,4 +98,19 @@ class _DesktopController implements _PlatformInterface<WebviewController> {
 
   @override
   void navigateTo(Uri uri) => _controller.loadUrl(uri.toString());
+
+  @override
+  Future<String?> get title async {
+    try {
+      return await _controller.title.first;
+    } on StateError {
+      return null;
+    }
+  }
+
+  @override
+  Stream<String?> get url => _controller.url;
+
+  @override
+  WebviewController getWebviewController() => _controller;
 }

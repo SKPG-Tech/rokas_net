@@ -6,12 +6,8 @@ typedef History = SinglyLinkedList<HistoryEntry>;
 final class HistoryEntry extends Page with SinglyLinkedNode<HistoryEntry> {
   final DateTime dateTime;
 
-  HistoryEntry({
-    DateTime? dateTime,
-    required super.uri,
-    super.title,
-    super.favicon,
-  }) : dateTime = dateTime ?? .now();
+  HistoryEntry({DateTime? dateTime, required super.uri, super.title})
+    : dateTime = dateTime ?? .now();
 
   @override
   Map<String, dynamic> toJson() => {

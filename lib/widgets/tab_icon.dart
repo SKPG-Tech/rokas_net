@@ -1,5 +1,3 @@
-import "dart:convert";
-
 import "package:material_ui/material_ui.dart" hide Page;
 
 import "../models/page.dart";
@@ -12,7 +10,11 @@ class TabIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return page.favicon != null
-        ? ImageIcon(MemoryImage(base64Decode(page.favicon!)))
+        ? Image.network(
+            height: 24,
+            page.favicon!,
+            errorBuilder: (_, _, _) => const Icon(Icons.tab),
+          )
         : const Icon(Icons.tab);
   }
 }
