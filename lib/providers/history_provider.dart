@@ -21,8 +21,10 @@ class HistoryProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void clearHistory() {
-    _globalHistory.clear();
+  void clearPast2HourHistory() {
+    final past2Hours = DateTime.now().subtract(const .new(hours: 2));
+    final entries = _globalHistory.where((e) => e.dateTime.isAfter(past2Hours));
+    for (final entry in entries.toList()) entry.unlink();
     notifyListeners();
   }
 }

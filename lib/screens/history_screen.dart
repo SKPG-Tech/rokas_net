@@ -48,6 +48,7 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   final _searchController = TextEditingController();
+  final _expansibleControllers = <TimePeriod, ExpansibleController>{};
   RegExp? _searchQuery;
 
   @override
@@ -98,7 +99,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           title: TextField(
             controller: _searchController,
             decoration: const InputDecoration(
-              hintText: "Search",
+              hintText: "Search history",
               border: ShapedInputBorder(
                 shape: RoundedRectangleBorder(
                   borderRadius: .all(.circular(25)),
@@ -113,6 +114,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   context: context,
                   builder: (context) => AlertDialog(
                     title: const Text("Are you sure?"),
+                    content: const Text(
+                      "This will delete the history of the past 2 hours.",
+                    ),
                     actions: [
                       TextButton(
                         onPressed: () => context.pop(true),
@@ -130,7 +134,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                 );
                 if (confirmation != null && confirmation && context.mounted)
-                  context.read<HistoryProvider>().clearHistory();
+                  context.read<HistoryProvider>().clearPast2HourHistory();
               },
               icon: const Icon(Symbols.delete_history_rounded),
             ),
@@ -140,25 +144,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
           shrinkWrap: true,
           children: TimePeriod.values.map((timePeriod) {
             final filteredHistory = timePeriod.filter(history);
-            final expansibleController = ExpansibleController();
-            if (filteredHistory.isNotEmpty) expansibleController.expand();
+            final controller = _expansibleControllers.putIfAbsent(
+              timePeriod,
+              () => .new(),
+            );
+            if (_searchQuery != null && filteredHistory.isNotEmpty)
+              controller.expand();
             return Expansible(
-              controller: expansibleController,
+              controller: controller,
               headerBuilder: (_, animation) => ListTile(
                 title: Text(timePeriod.title),
                 trailing: RotationTransition(
                   turns: Tween(begin: 0.0, end: 0.5).animate(animation),
                   child: const Icon(Icons.arrow_drop_down, size: 35),
                 ),
-                onTap: () {
-                  if (expansibleController.isExpanded) {
-                    expansibleController.collapse();
-                  } else {
-                    expansibleController.expand();
-                  }
-                },
+                onTap: () => controller.isExpanded
+                    ? controller.collapse()
+                    : controller.expand(),
               ),
-              bodyBuilder: (_, _) => _buildTab(filteredHistory),
+              bodyBuilder: (_, _) =>
+                  _buildPeriod(timePeriod.filter(filteredHistory)),
             );
           }).toList(),
         ),
@@ -166,7 +171,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Widget _buildTab(Iterable<HistoryEntry> history) {
+  Widget _buildPeriod(Iterable<HistoryEntry> history) {
     if (history.isEmpty) {
       return const Text("Nothing");
     }
