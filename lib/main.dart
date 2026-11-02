@@ -8,5 +8,5 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await HistoryRepository.initialize();
   await HapticFeedback.initialize();
-  runApp(const RokasNetApp());
+  runApp(RokasNetApp(historyProvider: .new()));
 }

@@ -1,6 +1,7 @@
 import "package:flutter/foundation.dart";
 
 import "../models/history_entry.dart";
+import "../models/page.dart";
 import "../repositories/history_repository.dart";
 
 class HistoryProvider with ChangeNotifier {
@@ -10,8 +11,18 @@ class HistoryProvider with ChangeNotifier {
 
   History get globalHistory => _globalHistory;
 
-  void addEntry(Uri uri) {
-    _globalHistory.add(HistoryEntry(uri: uri));
-    HistoryRepository.saveHistory(_globalHistory);
+  void addEntry(Page? page) {
+    _globalHistory.add(HistoryEntry(uri: page?.uri, title: page?.title));
+    notifyListeners();
+  }
+
+  void removeEntry(HistoryEntry entry) {
+    entry.unlink();
+    notifyListeners();
+  }
+
+  void clearHistory() {
+    _globalHistory.clear();
+    notifyListeners();
   }
 }

@@ -89,7 +89,14 @@ class NavDrawer extends StatelessWidget {
         ...tabs.map(
           (tab) => _NavigationDestination(
             icon: TabIcon(page: tab),
-            label: Text(tab.title ?? tab.uri.toString()),
+            label: SizedBox(
+              width: 180,
+              child: Text(
+                tab.title ?? "New tab",
+                maxLines: 2,
+                overflow: .ellipsis,
+              ),
+            ),
             onClosePressed: () => onCloseTabPressed(tab),
           ),
         ),
