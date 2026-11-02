@@ -7,9 +7,7 @@ typedef Tabs = DoublyLinkedList<Tab>;
 final class Tab extends Page with DoublyLinkedNode<Tab> {
   final forwardHistory = Stack<Page>();
   final backwardHistory = Stack<Page>();
-  bool active;
+  bool isActive;
 
-  Tab({super.uri, super.title, bool? isActive}) : active = isActive ?? true;
-
-  void toggleActivation() => active = !active;
+  Tab({super.uri, super.title, bool? isActive}) : isActive = isActive ?? true;
 }

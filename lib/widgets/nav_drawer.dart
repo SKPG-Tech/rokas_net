@@ -92,11 +92,12 @@ class NavDrawer extends StatelessWidget {
             label: SizedBox(
               width: 180,
               child: Text(
-                tab.title ?? "New tab",
+                (tab.title ?? "New tab") + (!tab.isActive ? " - Inactive" : ""),
                 maxLines: 2,
                 overflow: .ellipsis,
               ),
             ),
+            enabled: tab.isActive,
             onClosePressed: () => onCloseTabPressed(tab),
           ),
         ),
@@ -112,13 +113,13 @@ class _NavigationDestination extends NavigationDrawerDestination {
   const _NavigationDestination({
     required super.icon,
     required super.label,
+    super.enabled,
     required this.onClosePressed,
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-
     return Stack(
       children: [
         super.build(context),
