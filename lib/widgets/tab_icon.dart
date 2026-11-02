@@ -1,6 +1,9 @@
+import "package:cached_network_image/cached_network_image.dart";
 import "package:material_ui/material_ui.dart" hide Page;
 
 import "../models/page.dart";
+
+const Icon _icon = Icon(Icons.tab);
 
 class TabIcon extends StatelessWidget {
   final Page page;
@@ -9,12 +12,14 @@ class TabIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return page.favicon != null
-        ? Image.network(
-            height: 24,
-            page.favicon!,
-            errorBuilder: (_, _, _) => const Icon(Icons.tab),
-          )
-        : const Icon(Icons.tab);
+    if (page.favicon == null) return _icon;
+    return CachedNetworkImage(
+      imageUrl: page.favicon!,
+      height: 24,
+      width: 24,
+      fadeInDuration: const .new(milliseconds: 300),
+      placeholder: (_, _) => _icon,
+      errorWidget: (_, _, _) => _icon,
+    );
   }
 }
