@@ -1,4 +1,4 @@
-import "package:material_ui/material_ui.dart";
+import "package:material_ui/material_ui.dart" hide Page;
 import "package:provider/provider.dart";
 
 import "../providers/tab_provider.dart";
