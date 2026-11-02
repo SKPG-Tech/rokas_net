@@ -16,6 +16,7 @@ class TabProvider with ChangeNotifier {
 
   void selectTab(int index) {
     _tabIndex = index;
+    _tab = _tabs.elementAt(index);
     notifyListeners();
   }
 
@@ -51,7 +52,9 @@ class TabProvider with ChangeNotifier {
       return;
     }
 
-    _tab!.backwardHistory.push(Page(uri: _tab!.uri));
+    if (_tab!.uri != null) {
+      _tab!.backwardHistory.push(Page(uri: _tab!.uri));
+    }
     _tab!.forwardHistory.clear();
     _tab!.uri = uri;
     notifyListeners();
