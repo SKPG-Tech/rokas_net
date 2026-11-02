@@ -18,11 +18,13 @@ class BrowserScreen extends StatefulWidget {
   State<BrowserScreen> createState() => _BrowserScreenState();
 }
 
+CrossplatformWebviewController getNewWebviewController() {
+  return .new(delegate: () => .new());
+}
+
 class _BrowserScreenState extends State<BrowserScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  final _webviewController = CrossplatformWebviewController(
-    delegate: () => .new(),
-  );
+  var _webviewController = getNewWebviewController();
   late final FocusNode _urlFieldFocusNode;
 
   @override
@@ -42,7 +44,26 @@ class _BrowserScreenState extends State<BrowserScreen> {
   @override
   Widget build(BuildContext context) {
     final uri = context.select((TabProvider provider) => provider.tab?.uri);
-    if (uri != null) setState(() => _webviewController.navigateTo(uri));
+    if (uri != null) {
+      setState(() {
+        _webviewController.navigateTo(uri);
+        _webviewController.title.then((title) {
+          if (context.mounted) {
+            final tab = context.read<TabProvider>().tab;
+            tab?.title = title;
+            context.read<HistoryProvider>().addEntry(tab);
+          }
+        });
+      });
+    } else {
+      _webviewController = getNewWebviewController();
+      _webviewController.initialize();
+      _webviewController.url.distinct().listen((url) {
+        if (context.mounted && url != null) {
+          context.read<TabProvider>().navigateTab(.parse(url));
+        }
+      });
+    }
 
     return Consumer<TabProvider>(
       builder: (context, tabProvider, _) {
@@ -64,7 +85,6 @@ class _BrowserScreenState extends State<BrowserScreen> {
               if (uri == tab?.uri) return;
 
               tabProvider.navigateTab(uri);
-              context.read<HistoryProvider>().addEntry(uri);
               _urlFieldFocusNode.unfocus();
             },
           ),
