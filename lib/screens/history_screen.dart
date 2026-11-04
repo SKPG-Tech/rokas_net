@@ -12,8 +12,8 @@ import "../widgets/tab_icon.dart";
 enum TimePeriod {
   today("Today"),
   yesterday("Yesterday"),
-  thisWeek("This week"),
-  thisMonth("This month"),
+  week("This week"),
+  month("This month"),
   older("Older");
 
   final String title;
@@ -26,12 +26,13 @@ extension FilterHistory on TimePeriod {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const .new(days: 1));
+    final thisWeek = today.subtract(const .new(days: 7));
     final thisMonth = DateTime(now.year, now.month);
     final filter = switch (this) {
       .today => (dt) => dt.isAfter(today),
       .yesterday => (dt) => dt.isAfter(yesterday) && dt.isBefore(today),
-      .thisWeek => (dt) => now.difference(dt).inDays <= 7,
-      .thisMonth => (dt) => dt.isAfter(thisMonth),
+      .week => (dt) => now.difference(dt).inDays <= 7 && dt.isBefore(yesterday),
+      .month => (dt) => dt.isAfter(thisMonth) && dt.isBefore(thisWeek),
       .older => (dt) => dt.isBefore(thisMonth),
     };
 
