@@ -16,7 +16,7 @@ class BrowserAppBar extends StatefulWidget implements PreferredSizeWidget {
 
   final VoidCallback? onBackwardPressed;
   final VoidCallback? onForwardPressed;
-  final ValueChanged<String>? onUrlSubmitted;
+  final ValueChanged<String> onUrlSubmitted;
 
   late final TextEditingController _urlController;
 
@@ -70,9 +70,16 @@ class _BrowserAppBarState extends State<BrowserAppBar>
     final pastThreshold = offset > _kSwipeThreshold;
 
     bool tabAvailable(_SwipeDirection direction) {
+      if (tabProvider.tab == null) return false;
       return switch (direction) {
-        .right => swipeDirection == .right && tabProvider.tab?.next != null,
-        .left => swipeDirection == .left && tabProvider.tab?.previous != null,
+        .right =>
+          swipeDirection == .right &&
+              tabProvider.tab!.next != null &&
+              tabProvider.tab!.next!.isActive,
+        .left =>
+          swipeDirection == .left &&
+              tabProvider.tab!.previous != null &&
+              tabProvider.tab!.previous!.isActive,
       };
     }
 
