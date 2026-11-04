@@ -1,4 +1,5 @@
 import "package:flutter/foundation.dart";
+import "package:flutter_inappwebview/flutter_inappwebview.dart";
 
 import "../models/page.dart";
 import "../models/tab.dart";
@@ -18,6 +19,9 @@ class TabProvider with ChangeNotifier {
       return null;
     }
   }
+
+  bool get canGoBackward => _tab != null && _tab!.backwardHistory.isNotEmpty;
+  bool get canGoForward => _tab != null && _tab!.forwardHistory.isNotEmpty;
 
   void selectTab(int index) {
     _tab = _tabs.elementAt(index);
@@ -42,7 +46,7 @@ class TabProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void openNewTab({Uri? url}) {
+  void openNewTab({WebUri? url}) {
     _tabs.addFirst(Tab(url: url));
     if (_tabs.length == 1) _tab = _tabs.single;
     _refreshTabState();
@@ -50,16 +54,16 @@ class TabProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void navigateTab(Uri url) {
+  void navigateTab(WebUri url, {bool shouldSave = false}) {
     if (_tab == null) {
       openNewTab(url: url);
       return;
     }
 
-    if (_tab!.url != null) {
+    if (_tab!.url != null && shouldSave) {
       _tab!.backwardHistory.push(Page(url: _tab!.url));
+      _tab!.forwardHistory.clear();
     }
-    _tab!.forwardHistory.clear();
     _tab!.url = url;
     notifyListeners();
   }
@@ -74,16 +78,6 @@ class TabProvider with ChangeNotifier {
     _tab!.forwardHistory.push(Page(url: _tab!.url));
     _tab!.url = _tab!.backwardHistory.pop().url;
     notifyListeners();
-  }
-
-  VoidCallback? get forwardHandler {
-    if (_tab == null || _tab!.forwardHistory.isEmpty) return null;
-    return goForward;
-  }
-
-  VoidCallback? get backwardHandler {
-    if (_tab == null || _tab!.backwardHistory.isEmpty) return null;
-    return goBackward;
   }
 
   void _refreshTabState() {
