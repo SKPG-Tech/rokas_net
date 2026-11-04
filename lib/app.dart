@@ -1,5 +1,6 @@
 import "dart:ui";
 
+import "package:flutter/services.dart";
 import "package:material_ui/material_ui.dart";
 import "package:provider/provider.dart";
 
@@ -7,6 +8,8 @@ import "providers/history_provider.dart";
 import "providers/tab_provider.dart";
 import "repositories/history_repository.dart";
 import "routes.dart";
+
+typedef NavigationGesture = ValueNotifier<SwipeEdge?>;
 
 class RokasNetApp extends StatefulWidget {
   final HistoryProvider historyProvider;
@@ -18,6 +21,8 @@ class RokasNetApp extends StatefulWidget {
 }
 
 class _RokasNetAppState extends State<RokasNetApp> with WidgetsBindingObserver {
+  final _navigationGesture = NavigationGesture(null);
+
   @override
   void initState() {
     super.initState();
@@ -50,11 +55,18 @@ class _RokasNetAppState extends State<RokasNetApp> with WidgetsBindingObserver {
   }
 
   @override
+  bool handleStartBackGesture(PredictiveBackEvent backEvent) {
+    setState(() => _navigationGesture.value = backEvent.swipeEdge);
+    return super.handleStartBackGesture(backEvent);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => TabProvider()),
         ChangeNotifierProvider.value(value: widget.historyProvider),
+        ChangeNotifierProvider.value(value: _navigationGesture),
       ],
       child: MaterialApp.router(
         title: "RokasNet",

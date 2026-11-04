@@ -1,6 +1,7 @@
 import "package:advanced_haptics/advanced_haptics.dart";
 
 enum HapticPrimitives {
+  tick(.tick),
   quickRise(.quickRise),
   quickFall(.quickFall),
   thud(.thud),

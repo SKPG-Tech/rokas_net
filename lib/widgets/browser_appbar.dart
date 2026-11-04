@@ -2,7 +2,9 @@ import "package:material_symbols_icons/symbols.dart";
 import "package:material_ui/material_ui.dart" hide Tab;
 import "package:provider/provider.dart";
 
+import "../models/tab.dart";
 import "../providers/tab_provider.dart";
+import "../utils/haptics.dart";
 
 const Size _kAppBarSize = .fromHeight(67);
 const double _kSwipeThreshold = 100;
@@ -10,7 +12,7 @@ const double _kSwipeThreshold = 100;
 enum _SwipeDirection { left, right }
 
 class BrowserAppBar extends StatefulWidget implements PreferredSizeWidget {
-  final Uri? initialUrl;
+  final Tab? tab;
 
   final VoidCallback? onBackwardPressed;
   final VoidCallback? onForwardPressed;
@@ -20,11 +22,11 @@ class BrowserAppBar extends StatefulWidget implements PreferredSizeWidget {
 
   BrowserAppBar({
     super.key,
-    this.initialUrl,
+    this.tab,
     required this.onBackwardPressed,
     required this.onForwardPressed,
     required this.onUrlSubmitted,
-  }) : _urlController = .new(text: initialUrl?.toString());
+  }) : _urlController = .new(text: tab?.url?.toString());
 
   @override
   State<BrowserAppBar> createState() => _BrowserAppBarState();
@@ -38,6 +40,7 @@ class _BrowserAppBarState extends State<BrowserAppBar>
   late final AnimationController _animController;
   Offset _dragOffset = .zero;
   Animation<Offset>? _animation;
+  bool _popped = false;
 
   @override
   void initState() {
@@ -64,23 +67,43 @@ class _BrowserAppBarState extends State<BrowserAppBar>
     final swipeDirection = _dragOffset.dx.sign == -1
         ? _SwipeDirection.left
         : _SwipeDirection.right;
+    final pastThreshold = offset > _kSwipeThreshold;
+
+    bool tabAvailable(_SwipeDirection direction) {
+      return switch (direction) {
+        .right => swipeDirection == .right && tabProvider.tab?.next != null,
+        .left => swipeDirection == .left && tabProvider.tab?.previous != null,
+      };
+    }
 
     return GestureDetector(
-      onHorizontalDragUpdate: (details) {
+      onHorizontalDragUpdate: (details) async {
         if (_animController.isAnimating) _animController.stop();
-        setState(() => _dragOffset += details.delta);
+        var popped = _popped && pastThreshold;
+        if (pastThreshold && !_popped) {
+          await HapticFeedback.play(.tick);
+          popped = true;
+        }
+        setState(() {
+          _dragOffset += details.delta;
+          _popped = popped;
+        });
       },
       onHorizontalDragEnd: (details) {
-        if (offset > _kSwipeThreshold) {
+        if (pastThreshold) {
           final tab = tabProvider.tab;
           final tabs = tabProvider.tabs.indexed;
-          var index = tabProvider.tabIndex;
-          if (swipeDirection == .right && tab?.next != null) {
-            index = tabs.firstWhere((e) => identical(e.$2, tab?.next)).$1;
-          } else if (swipeDirection == .left && tab?.previous != null) {
-            index = tabs.firstWhere((e) => identical(e.$2, tab?.previous)).$1;
+          if (tabAvailable(.right)) {
+            tabProvider.selectTab(
+              tabs.firstWhere((e) => identical(e.$2, tab?.next)).$1,
+            );
+            HapticFeedback.play(.spin);
+          } else if (tabAvailable(.left)) {
+            tabProvider.selectTab(
+              tabs.firstWhere((e) => identical(e.$2, tab?.previous)).$1,
+            );
+            HapticFeedback.play(.spin);
           }
-          if (index != null) tabProvider.selectTab(index);
         }
 
         _animation = Tween<Offset>(begin: _dragOffset, end: .zero).animate(
@@ -101,10 +124,15 @@ class _BrowserAppBarState extends State<BrowserAppBar>
                 horizontal: 15,
               ),
               color: colorScheme.surfaceContainer,
-              child: Text(switch (swipeDirection) {
-                .right => "Previous tab",
-                .left => "Next tab",
-              }),
+              child: AnimatedSlide(
+                offset: !pastThreshold ? _dragOffset / 400 : .zero,
+                duration: _animController.duration!,
+                curve: Curves.easeOutExpo,
+                child: Text(switch (swipeDirection) {
+                  .right => tabAvailable(.right) ? "Previous tab" : "No tab",
+                  .left => tabAvailable(.left) ? "Next tab" : "No tab",
+                }, style: .new(fontWeight: pastThreshold ? .w600 : .normal)),
+              ),
             ),
           ),
           Transform.translate(
@@ -130,6 +158,7 @@ class _BrowserAppBarState extends State<BrowserAppBar>
               titleSpacing: 4,
               actionsPadding: const .only(right: 10),
               title: TextField(
+                enabled: widget.tab != null,
                 controller: widget._urlController,
                 keyboardType: .url,
                 decoration: const InputDecoration(
