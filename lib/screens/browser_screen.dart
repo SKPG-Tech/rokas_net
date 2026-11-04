@@ -1,3 +1,4 @@
+import "dart:collection";
 import "dart:io";
 
 import "package:flutter_inappwebview/flutter_inappwebview.dart";
@@ -25,6 +26,7 @@ class BrowserScreen extends StatefulWidget {
 class _BrowserScreenState extends State<BrowserScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   final _webviewController = InAppWebviewController();
+  final _pointerQueue = Queue<bool>();
 
   static final _kIsAndroid = Platform.isAndroid;
 
@@ -62,21 +64,33 @@ class _BrowserScreenState extends State<BrowserScreen> {
     final tab = tabProvider.tab;
     final initialRequest = _kIsAndroid && tab?.url == null;
 
-    final body = tab == null
-        ? const _NewTabView()
-        : InAppWebView(
-            key: ValueKey(tab),
-            initialUrlRequest: !initialRequest ? .new(url: tab.url) : null,
-            onWebViewCreated: _webviewController.onWebViewCreated,
-            onLoadStop: (controller, url) async {
-              final shouldSave = _webviewController.shouldSave;
-              tabProvider.navigateTab(url!, shouldSave: shouldSave);
-              final icon = await _webviewController.getIcon();
-              tab.favicon = icon?.url.toString();
-              if (shouldSave) historyProvider.addEntry(tab);
-            },
-            onTitleChanged: (_, title) => tab.title = title,
-          );
+    final Widget body;
+    if (tab == null) {
+      body = const _NewTabView();
+    } else {
+      body = Listener(
+        onPointerUp: (_) => _pointerQueue.add(true),
+        child: InAppWebView(
+          key: ValueKey(tab),
+          initialSettings: .new(useShouldOverrideUrlLoading: true),
+          initialUrlRequest: !initialRequest ? .new(url: tab.url) : null,
+          onWebViewCreated: _webviewController.onWebViewCreated,
+          onTitleChanged: (_, title) => tab.title = title,
+          onLoadStop: (_, url) async {
+            final shouldSave = _webviewController.shouldSave;
+            tabProvider.navigateTab(url!, shouldSave: shouldSave);
+            final icon = await _webviewController.getIcon();
+            tab.favicon = icon?.url.toString();
+            if (shouldSave) historyProvider.addEntry(tab);
+          },
+          shouldOverrideUrlLoading: (_, action) async {
+            if (_pointerQueue.isNotEmpty && _pointerQueue.removeFirst())
+              _webviewController.shouldSave = true;
+            return .ALLOW;
+          },
+        ),
+      );
+    }
 
     return PopScope(
       canPop: false,
