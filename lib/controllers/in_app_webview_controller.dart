@@ -10,5 +10,5 @@ class InAppWebviewController {
       _webviewController?.loadUrl(urlRequest: .new(url: url));
 
   Future<Favicon?> getIcon() async =>
-      (await _webviewController?.getFavicons())?.last;
+      (await _webviewController?.getFavicons())?.firstOrNull;
 }

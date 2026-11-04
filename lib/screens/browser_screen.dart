@@ -72,7 +72,8 @@ class _BrowserScreenState extends State<BrowserScreen> {
                   onWebViewCreated: _webviewController.onWebViewCreated,
                   onLoadStop: (controller, url) async {
                     tabProvider.navigateTab(url!.uriValue);
-                    print(await _webviewController.getIcon());
+                    final icon = await _webviewController.getIcon();
+                tab.favicon = icon?.url.toString();
                   },
                   onTitleChanged: (_, title) => print("TITLE: $title"),
                 ),

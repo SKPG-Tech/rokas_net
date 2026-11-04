@@ -11,8 +11,8 @@ class HistoryProvider with ChangeNotifier {
 
   History get globalHistory => _globalHistory;
 
-  void addEntry(Page? page) {
-    _globalHistory.add(HistoryEntry(url: page?.url, title: page?.title));
+  void addEntry(Page page) {
+    _globalHistory.add(.fromJson(page.toJson()));
     notifyListeners();
   }
 
