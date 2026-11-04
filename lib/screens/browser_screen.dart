@@ -1,10 +1,15 @@
+import "dart:io";
+
 import "package:flutter_inappwebview/flutter_inappwebview.dart";
 import "package:material_symbols_icons/symbols.dart";
 import "package:material_ui/material_ui.dart" hide Tab;
 import "package:provider/provider.dart";
 
+import "../app.dart";
 import "../controllers/in_app_webview_controller.dart";
+import "../providers/history_provider.dart";
 import "../providers/tab_provider.dart";
+import "../utils/haptics.dart";
 import "../utils/ui.dart";
 import "../widgets/browser_appbar.dart";
 import "../widgets/history_button.dart";
@@ -21,6 +26,8 @@ class _BrowserScreenState extends State<BrowserScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   final _webviewController = InAppWebviewController();
 
+  static final _kIsAndroid = Platform.isAndroid;
+
   @override
   void initState() {
     super.initState();
@@ -31,54 +38,97 @@ class _BrowserScreenState extends State<BrowserScreen> {
     super.dispose();
   }
 
+  VoidCallback? _goForwardHandler(TabProvider tabProvider) {
+    if (!tabProvider.canGoForward) return null;
+    return () {
+      tabProvider.goForward();
+      _webviewController.loadUrl(tabProvider.tab!.url!);
+    };
+  }
+
+  VoidCallback? _goBackwardHandler(TabProvider tabProvider) {
+    if (!tabProvider.canGoBackward) return null;
+    return () {
+      tabProvider.goBackward();
+      _webviewController.loadUrl(tabProvider.tab!.url!);
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Consumer<TabProvider>(
-      builder: (context, tabProvider, _) {
-        final tab = tabProvider.tab;
+    final tabProvider = context.watch<TabProvider>();
+    final historyProvider = context.read<HistoryProvider>();
 
-        return Scaffold(
-          key: _scaffoldKey,
-          resizeToAvoidBottomInset: false,
-          appBar: BrowserAppBar(
-            initialUrl: tab?.url,
-            onBackwardPressed: tabProvider.backwardHandler,
-            onForwardPressed: tabProvider.forwardHandler,
-            onUrlSubmitted: (value) {
-              if (!value.startsWith(RegExp(r"https?:\/\/")))
-                value = "https://$value";
+    final tab = tabProvider.tab;
+    final initialRequest = _kIsAndroid && tab?.url == null;
 
-              final url = WebUri(value);
-              if (url == tab?.url) return;
+    final body = tab == null
+        ? const _NewTabView()
+        : InAppWebView(
+            key: ValueKey(tab),
+            initialUrlRequest: !initialRequest ? .new(url: tab.url) : null,
+            onWebViewCreated: _webviewController.onWebViewCreated,
+            onLoadStop: (controller, url) async {
+              final shouldSave = _webviewController.shouldSave;
+              tabProvider.navigateTab(url!, shouldSave: shouldSave);
+              final icon = await _webviewController.getIcon();
+              tab.favicon = icon?.url.toString();
+              if (shouldSave) historyProvider.addEntry(tab);
+            },
+            onTitleChanged: (_, title) => tab.title = title,
+          );
 
-              _webviewController.loadUrl(url);
-            },
-          ),
-          endDrawer: NavDrawer(
-            tabs: tabProvider.tabs,
-            selectedIndex: tabProvider.tabIndex,
-            onDestinationSelected: (value) {
-              tabProvider.selectTab(value);
-              _scaffoldKey.currentState?.closeEndDrawer();
-            },
-            onNewTabPressed: () {
-              tabProvider.openNewTab();
-            },
-            onCloseTabPressed: (tab) => tabProvider.closeTab(tab),
-          ),
-          body: tab == null
-              ? const _NewTabView()
-              : InAppWebView(
-                  onWebViewCreated: _webviewController.onWebViewCreated,
-                  onLoadStop: (controller, url) async {
-                    tabProvider.navigateTab(url!.uriValue);
-                    final icon = await _webviewController.getIcon();
-                tab.favicon = icon?.url.toString();
-                  },
-                  onTitleChanged: (_, title) => print("TITLE: $title"),
-                ),
-        );
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final drawerState = _scaffoldKey.currentState;
+        if (drawerState != null && drawerState.isEndDrawerOpen) {
+          drawerState.closeEndDrawer();
+          return;
+        }
+        final swipeEdge = context.read<NavigationGesture>();
+        if (swipeEdge.value == null) return;
+        final action = switch (swipeEdge.value!) {
+          .left => _goBackwardHandler(tabProvider),
+          .right => _goForwardHandler(tabProvider),
+        };
+        if (action == null) await HapticFeedback.play(.thud);
+        if (action != null) {
+          action();
+          await HapticFeedback.play(.spin);
+        }
       },
+      child: Scaffold(
+        key: _scaffoldKey,
+        resizeToAvoidBottomInset: false,
+        appBar: BrowserAppBar(
+          tab: tab,
+          onBackwardPressed: _goBackwardHandler(tabProvider),
+          onForwardPressed: _goForwardHandler(tabProvider),
+          onUrlSubmitted: (value) {
+            if (!value.startsWith(RegExp(r"https?:\/\/")))
+              value = "https://$value";
+
+            final url = WebUri(value);
+            if (url == tab?.url) return;
+
+            _webviewController.loadUrl(url, shouldSave: true);
+          },
+        ),
+        endDrawer: NavDrawer(
+          tabs: tabProvider.tabs,
+          selectedIndex: tabProvider.tabIndex,
+          onDestinationSelected: (value) {
+            tabProvider.selectTab(value);
+            if (tab!.url != null) _webviewController.loadUrl(tab.url!);
+            _scaffoldKey.currentState?.closeEndDrawer();
+          },
+          onNewTabPressed: tabProvider.openNewTab,
+          onCloseTabPressed: tabProvider.closeTab,
+        ),
+        body: body,
+      ),
     );
   }
 }
