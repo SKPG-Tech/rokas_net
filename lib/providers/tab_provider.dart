@@ -65,6 +65,7 @@ class TabProvider with ChangeNotifier {
       _tab!.forwardHistory.clear();
     }
     _tab!.url = url;
+    _tab!.lastUsage = .now();
     notifyListeners();
   }
 
@@ -81,6 +82,17 @@ class TabProvider with ChangeNotifier {
   }
 
   void _refreshTabState() {
-    for (final (index, tab) in _tabs.indexed) tab.isActive = index < 5;
+    if (_tabs.isEmpty) return;
+
+    bool isActive(Tab tab) => tab.isActive;
+    for (final tab in _tabs) tab.isActive = true;
+
+    for (var count = _tabs.length - 5; count > 0; count--) {
+      var lruTab = _tabs.firstWhere(isActive);
+      for (final tab in _tabs.where(isActive)) {
+        if (tab.lastUsage.isBefore(lruTab.lastUsage)) lruTab = tab;
+      }
+      lruTab.isActive = false;
+    }
   }
 }

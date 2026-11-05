@@ -8,6 +8,9 @@ final class Tab extends Page with DoublyLinkedNode<Tab> {
   final forwardHistory = Stack<Page>();
   final backwardHistory = Stack<Page>();
   bool isActive;
+  DateTime lastUsage;
 
-  Tab({super.url, super.title, bool? isActive}) : isActive = isActive ?? true;
+  Tab({super.url, super.title, bool? isActive})
+    : isActive = isActive ?? true,
+      lastUsage = .now();
 }

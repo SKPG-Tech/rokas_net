@@ -84,8 +84,10 @@ class _BrowserScreenState extends State<BrowserScreen> {
             if (shouldSave) historyProvider.addEntry(tab);
           },
           shouldOverrideUrlLoading: (_, action) async {
-            if (_pointerQueue.isNotEmpty && _pointerQueue.removeFirst())
+            if (_pointerQueue.isNotEmpty && _pointerQueue.removeFirst()) {
               _webviewController.shouldSave = true;
+              _pointerQueue.clear();
+            }
             return .ALLOW;
           },
         ),
