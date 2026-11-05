@@ -58,7 +58,6 @@ class _BrowserAppBarState extends State<BrowserAppBar>
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final textStyles = Theme.of(context).textTheme;
 
     final scaffoldState = Scaffold.of(context);
     final tabProvider = context.read<TabProvider>();

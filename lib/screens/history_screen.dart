@@ -31,7 +31,7 @@ extension FilterHistory on TimePeriod {
     final filter = switch (this) {
       .today => (dt) => dt.isAfter(today),
       .yesterday => (dt) => dt.isAfter(yesterday) && dt.isBefore(today),
-      .week => (dt) => now.difference(dt).inDays <= 7 && dt.isBefore(yesterday),
+      .week => (dt) => dt.isAfter(thisWeek) && dt.isBefore(yesterday),
       .month => (dt) => dt.isAfter(thisMonth) && dt.isBefore(thisWeek),
       .older => (dt) => dt.isBefore(thisMonth),
     };
@@ -144,30 +144,32 @@ class _HistoryScreenState extends State<HistoryScreen> {
         body: ListView(
           shrinkWrap: true,
           physics: const ClampingScrollPhysics(),
-          children: TimePeriod.values.map((timePeriod) {
-            final filteredHistory = timePeriod.filter(history);
-            final controller = _expansibleControllers.putIfAbsent(
-              timePeriod,
-              () => .new(),
-            );
-            if (_searchQuery != null && filteredHistory.isNotEmpty)
-              controller.expand();
-            return Expansible(
-              controller: controller,
-              headerBuilder: (_, animation) => ListTile(
-                title: Text(timePeriod.title),
-                trailing: RotationTransition(
-                  turns: Tween(begin: 0.0, end: 0.5).animate(animation),
-                  child: const Icon(Icons.arrow_drop_down, size: 35),
+          children: [
+            ...TimePeriod.values.map((timePeriod) {
+              final filteredHistory = timePeriod.filter(history);
+              final controller = _expansibleControllers.putIfAbsent(
+                timePeriod,
+                () => .new(),
+              );
+              if (_searchQuery != null && filteredHistory.isNotEmpty)
+                controller.expand();
+              return Expansible(
+                controller: controller,
+                headerBuilder: (_, animation) => ListTile(
+                  title: Text(timePeriod.title),
+                  trailing: RotationTransition(
+                    turns: Tween(begin: 0.0, end: 0.5).animate(animation),
+                    child: const Icon(Icons.arrow_drop_down, size: 35),
+                  ),
+                  onTap: () => controller.isExpanded
+                      ? controller.collapse()
+                      : controller.expand(),
                 ),
-                onTap: () => controller.isExpanded
-                    ? controller.collapse()
-                    : controller.expand(),
-              ),
-              bodyBuilder: (_, _) =>
-                  _buildPeriod(timePeriod.filter(filteredHistory)),
-            );
-          }).toList(),
+                bodyBuilder: (_, _) =>
+                    _buildPeriod(timePeriod.filter(filteredHistory)),
+              );
+            }),
+          ],
         ),
       ),
     );
