@@ -19,6 +19,11 @@ class InAppWebviewController {
     _shouldSave = shouldSave;
   }
 
-  Future<Favicon?> getIcon() async =>
-      (await _webviewController?.getFavicons())?.firstOrNull;
+  Future<Favicon?> getIcon() async {
+    try {
+      return (await _webviewController?.getFavicons())?.firstOrNull;
+    } catch (_) {
+      return null;
+    }
+  }
 }
