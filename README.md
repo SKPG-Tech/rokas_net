@@ -11,7 +11,7 @@ RokasNet is a university project - a Flutter web browser with tab management and
 
 ## Demo
 
-<video src="./rokas_net_N8J3VqycL0.mp4" controls width="720"></video>
+https://github.com/user-attachments/assets/d5cd124a-d66c-4a39-8193-bd8fb25ca9e5
 
 [Open the demo video](./rokas_net_N8J3VqycL0.mp4)
 
