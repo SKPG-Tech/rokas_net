@@ -1,17 +1,29 @@
-# rokas_net
+# RokasNet
 
-A new Flutter project.
+RokasNet is a university project - a Flutter web browser with tab management and saved browsing history.
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter application.
+- Browse websites in an embedded webview
+- Open and switch between tabs
+- Navigate backward and forward
+- View and manage browsing history
 
-A few resources to get you started if this is your first Flutter project:
+## Demo
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+<video src="./rokas_net_N8J3VqycL0.mp4" controls width="720"></video>
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+[Open the demo video](./rokas_net_N8J3VqycL0.mp4)
+
+## History file
+
+Browsing history is stored in `istorija.json` in the device's Downloads folder. The app loads it when starting and saves it when closing or going inactive.
+
+## Run locally
+
+Install Flutter, then run:
+
+```sh
+flutter pub get
+flutter run
+```
